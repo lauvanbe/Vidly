@@ -1,5 +1,6 @@
-﻿using System;
+﻿using System.Data.Entity;
 using System.Collections.Generic;
+using System.Linq;
 using System.Web.Mvc;
 using Vidly.Models;
 using Vidly.ViewModels;
@@ -8,6 +9,18 @@ namespace Vidly.Controllers
 {
     public class MoviesController : Controller
     {
+        private ApplicationDbContext _context;
+
+        public MoviesController()
+        {
+            _context = new ApplicationDbContext();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            _context.Dispose();
+        }
+
         // GET: Movies/Random
         public ActionResult Random()
         {
@@ -35,42 +48,47 @@ namespace Vidly.Controllers
 
         public ActionResult ViewMovies()
         {
-            var listMovies = new List<Movie>()
-            {
-                new Movie(){ Name = "Die Hard"},
-                new Movie(){ Name = "Seigneur des anneaux"}
-            };
+            var movies = _context.Movies.Include(m => m.Genre).ToList();
 
-            var viewModel = new MoviesMovieViewModel()
-            {
-                ListMovies = listMovies
-            };
-            return View(viewModel);
-        }
-/*        public ActionResult Edit(int id)
-        {
-            return Content("id=" + id);
+            return View(movies);
         }
 
-        public ActionResult index(int? pageIndex, string sortBy)
+        [Route("Movies/ViewCustomers/{id}")]
+        public ActionResult ViewDetail(int id)
         {
-            if (!pageIndex.HasValue)
+            var movies = _context.Movies.Include(m => m.Genre).SingleOrDefault(c => c.Id == id);
+
+            if (movies == null)
             {
-                pageIndex = 1;
+                return HttpNotFound();
             }
 
-            if (String.IsNullOrWhiteSpace(sortBy))
-            {
-                sortBy = "Name";
-            }
-
-            return Content(string.Format("pageIndex={0}&sortBy{1}", pageIndex, sortBy));
+            return View(movies);
         }
+        /*        public ActionResult Edit(int id)
+                {
+                    return Content("id=" + id);
+                }
 
-        [Route("movies/released/{year}/{month:regex(\\d{4}:range(1,12)}")]
-        public ActionResult ByReleaseDate(int year, int month)
-        {
-            return Content(year + "/" + month);
-        } */
+                public ActionResult index(int? pageIndex, string sortBy)
+                {
+                    if (!pageIndex.HasValue)
+                    {
+                        pageIndex = 1;
+                    }
+
+                    if (String.IsNullOrWhiteSpace(sortBy))
+                    {
+                        sortBy = "Name";
+                    }
+
+                    return Content(string.Format("pageIndex={0}&sortBy{1}", pageIndex, sortBy));
+                }
+
+                [Route("movies/released/{year}/{month:regex(\\d{4}:range(1,12)}")]
+                public ActionResult ByReleaseDate(int year, int month)
+                {
+                    return Content(year + "/" + month);
+                } */
     }
 }
