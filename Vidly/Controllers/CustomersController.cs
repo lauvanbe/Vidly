@@ -1,43 +1,43 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Data.Entity;
 using System.Linq;
-using System.Web;
 using System.Web.Mvc;
 using Vidly.Models;
-using Vidly.ViewModels;
 
 namespace Vidly.Controllers
 {
     public class CustomersController : Controller
     {
+        private ApplicationDbContext _context;
+
+        public CustomersController()
+        {
+            _context = new ApplicationDbContext();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+           _context.Dispose();
+        }
         // GET: Customers
  
-        public ActionResult ViewCustomers()
+        public ViewResult ViewCustomers()
         {
-            var listCustomers = new List<Customer>()
-            {
-                new Customer(){ Name = "Laurent Van Beveren", Id = 0},
-                new Customer(){ Name = "Mennens Louis", Id = 1}
-            };
+            var customers = _context.Customers.Include(c => c.MembershipTypes).ToList();
 
-            var viewModel = new CustomersCustomerViewModel()
-            {
-                listCustomers = listCustomers
-            };
-
-            return View(viewModel);
+            return View(customers);
         }
 
         [Route("Customers/ViewCustomers/{id}")]
         public ActionResult ViewDetail(int id)
         {
-            var listCustomers = new List<Customer>()
-            {
-                new Customer(){ Name = "Laurent Van Beveren", Id = 0},
-                new Customer(){ Name = "Mennens Louis", Id = 1}
-            };
+            var customers = _context.Customers.SingleOrDefault(c => c.Id == id);
 
-            return View(listCustomers[id]);
+            if (customers == null)
+            {
+                return HttpNotFound();
+            }
+
+            return View(customers);
         }
     }
 }
